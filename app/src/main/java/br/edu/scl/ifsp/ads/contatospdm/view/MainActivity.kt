@@ -3,6 +3,9 @@ package br.edu.scl.ifsp.ads.contatospdm.view
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.view.ContextMenu
 import android.view.Menu
 import android.view.MenuItem
@@ -15,7 +18,9 @@ import br.edu.scl.ifsp.ads.contatospdm.R
 import br.edu.scl.ifsp.ads.contatospdm.adapter.ContactAdapter
 import br.edu.scl.ifsp.ads.contatospdm.controller.ContactController
 import br.edu.scl.ifsp.ads.contatospdm.controller.ContactRoomController
+import br.edu.scl.ifsp.ads.contatospdm.controller.ContactRtFbController
 import br.edu.scl.ifsp.ads.contatospdm.databinding.ActivityMainBinding
+import br.edu.scl.ifsp.ads.contatospdm.model.Constant.CONTACT_ARRAY
 import br.edu.scl.ifsp.ads.contatospdm.model.Constant.EXTRA_CONTACT
 import br.edu.scl.ifsp.ads.contatospdm.model.Constant.VIEW_CONTACT
 import br.edu.scl.ifsp.ads.contatospdm.model.Contact
@@ -29,13 +34,45 @@ class MainActivity : AppCompatActivity() {
     private val contactList: MutableList<Contact> = mutableListOf()
 
     // Controller
-    private val contactController: ContactRoomController by lazy {
-        ContactRoomController(this)
+    private val contactController: ContactRtFbController by lazy {
+        ContactRtFbController(this)
     }
 
     // Adapter
     private val contactAdapter: ContactAdapter by lazy {
-        ContactAdapter(this,contactList)
+        ContactAdapter(
+            this,
+            contactList)
+    }
+
+    companion object {
+        const val GET_CONTACTS_MSG = 1
+        const val GET_CONTACTS_INTERVAL = 2000L
+
+    }
+
+    // Handler
+    val updateContactListHandler = object: Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            super.handleMessage(msg)
+
+            //Busca os contatos ou atualiza a lista de acordo com o tipo da mensagem
+            if(msg.what == GET_CONTACTS_MSG){
+                //Busca os contatos de acordo com o intervalo e agenda uma nova busca
+                contactController.getContacts()
+                sendMessageDelayed(obtainMessage().apply { what = GET_CONTACTS_MSG },
+                    GET_CONTACTS_INTERVAL
+                )
+            }else{
+                msg.data.getParcelableArray(CONTACT_ARRAY)?.also { contactArray ->
+                    contactList.clear()
+                    contactArray.forEach {
+                        contactList.add(it as Contact)
+                    }
+                    contactAdapter.notifyDataSetChanged()
+                }
+            }
+        }
     }
 
     private lateinit var carl: ActivityResultLauncher<Intent>
@@ -44,7 +81,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(amb.root)
         setSupportActionBar(amb.toolbarIn.toolbar)
-//        fillContacts()
         amb.contatosLv.adapter = contactAdapter
         carl = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if(result.resultCode == RESULT_OK) {
@@ -68,7 +104,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         registerForContextMenu(amb.contatosLv)
-        contactController.getContacts()
+        updateContactListHandler.apply {
+            sendMessageDelayed(obtainMessage().apply { what = GET_CONTACTS_MSG },
+                GET_CONTACTS_INTERVAL
+            )
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -115,28 +155,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun fillContacts() {
-        for(i in 1..50) {
-            contactList.add(
-                Contact(
-                    i,
-                    "Nome $i",
-                    "Endereço $i",
-                    "Telefone $i",
-                    "Email $i"
-                )
-            )
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         unregisterForContextMenu(amb.contatosLv)
-    }
-
-    fun updateContactList(_contactList: MutableList<Contact>) {
-        contactList.clear()
-        contactList.addAll(_contactList)
-        contactAdapter.notifyDataSetChanged()
     }
 }

@@ -10,13 +10,13 @@ import kotlinx.android.parcel.Parcelize
 @Entity
 data class Contact(
     @PrimaryKey(autoGenerate = true)
-    var id: Int?,
+    var id: Int? = -1,
     @NonNull
-    var name: String,
+    var name: String = "",
     @NonNull
-    var address: String,
+    var address: String = "",
     @NonNull
-    var phone: String,
+    var phone: String = "",
     @NonNull
-    var email: String
+    var email: String = ""
 ): Parcelable

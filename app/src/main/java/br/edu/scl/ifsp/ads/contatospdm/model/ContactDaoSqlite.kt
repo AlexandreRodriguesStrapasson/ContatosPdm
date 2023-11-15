@@ -19,12 +19,12 @@ class ContactDaoSqlite(context: Context): ContactDao {
         private const val PHONE_COLUMN = "phone"
         private const val EMAIL_COLUMN = "email"
         private const val CREATE_CONTACT_TABLE_STATEMENT =
-                "CREATE TABLE IF NOT EXISTS $CONTACT_TABLE (" +
-                        "$ID_COLUMN INTEGER PRIMARY KEY AUTOINCREMENT," +
-                        "$NAME_COLUMN TEXT NOT NULL," +
-                        "$ADDRESS_COLUMN TEXT NOT NULL," +
-                        "$PHONE_COLUMN TEXT NOT NULL," +
-                        "$EMAIL_COLUMN TEXT NOT NULL);"
+            "CREATE TABLE IF NOT EXISTS $CONTACT_TABLE (" +
+                    "$ID_COLUMN INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "$NAME_COLUMN TEXT NOT NULL," +
+                    "$ADDRESS_COLUMN TEXT NOT NULL," +
+                    "$PHONE_COLUMN TEXT NOT NULL," +
+                    "$EMAIL_COLUMN TEXT NOT NULL);"
     }
 
     private val contactSqliteDatabase: SQLiteDatabase
